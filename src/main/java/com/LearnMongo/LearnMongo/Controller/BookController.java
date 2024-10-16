@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 //The @RestController annotation in Spring is a specialized version of the @Controller annotation, used in Spring MVC applications to create RESTful web services. It combines @Controller and @ResponseBody, meaning that it handles web requests and automatically serializes the response body to JSON or XML format.
@@ -55,8 +56,8 @@ public class BookController {
         return new ResponseEntity<>(book, HttpStatus.CREATED);
     }
 
-    @GetMapping("id/{myId}")
     // {} is not a parameter, it is a path variable
+    @GetMapping("id/{myId}")
     public ResponseEntity<?> getSingleEntry (@PathVariable ObjectId myId) {
         Optional<Book> student = bookEntryService.getBookEntry(myId);
         return student.isPresent()
@@ -64,9 +65,29 @@ public class BookController {
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @DeleteMapping("id/{myId}")
-    public ResponseEntity<?> deleteEntry(@PathVariable ObjectId myId) {
-        bookEntryService.deleteEntry(myId);
+    @PutMapping("/id/{username}/{myId}")
+    public  ResponseEntity<?> updateEntry(@PathVariable ObjectId myId, @PathVariable String username, @RequestBody Book newBook) {
+        User currentUser = userService.findByUsername(username);
+        List<Book> collect = currentUser.getOwnedBooks().stream().filter(x -> x.getId().equals(myId)).toList();
+        if(!collect.isEmpty()) {
+            Optional<Book> book = bookEntryService.getBookEntry(myId);
+            if(book.isPresent()) {
+                Book currentBook = book.get();
+                currentBook.setTitle(!newBook.getTitle().isEmpty()
+                        ? newBook.getTitle() : currentBook.getTitle());
+                currentBook.setContent(newBook.getContent() != null && !newBook.getContent().isEmpty()
+                        ? newBook.getContent() : currentBook.getContent());
+                bookEntryService.updateEntry(currentBook);
+                // Don't need to do anything in User because it has a DB reference of this Object.
+                return new ResponseEntity<>(currentBook, HttpStatus.OK);
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @DeleteMapping("id/{username}/{myId}")
+    public ResponseEntity<?> deleteEntry (@PathVariable ObjectId myId, @PathVariable String username) {
+        bookEntryService.deleteEntry(myId, username);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

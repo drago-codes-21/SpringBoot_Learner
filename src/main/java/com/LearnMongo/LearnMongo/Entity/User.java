@@ -23,6 +23,7 @@ public class User {
     private String password;
 
     @DBRef
-    //The @DBRef annotation in Spring Boot (specifically with Spring Data MongoDB) is used to define a reference to another document in a MongoDB collection. This is useful for establishing relationships between different entities in a NoSQL database.
+    //The @DBRef annotation in Spring Boot (specifically with Spring Data MongoDB) is used to define a reference to another document in a MongoDB collection.
+    // This is useful for establishing relationships between different entities in a NoSQL database.
     private List<Book> OwnedBooks = new ArrayList<>();
 }

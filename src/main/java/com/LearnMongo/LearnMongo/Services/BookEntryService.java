@@ -37,6 +37,10 @@ public class BookEntryService {
         userService.saveUser(currentUser);
     }
 
+    public void updateEntry(Book book) {
+        bookEntryRepo.save(book);
+    }
+
     public List<Book> getAllEntries() {
         return bookEntryRepo.findAll();
     }
@@ -45,7 +49,10 @@ public class BookEntryService {
         return bookEntryRepo.findById(id);
     }
 
-    public void deleteEntry(ObjectId id) {
+    public void deleteEntry(ObjectId id, String username) {
+        User currentUser = userService.findByUsername(username);
+        currentUser.getOwnedBooks().removeIf(x -> x.getId().equals(id));
+        userService.saveUser(currentUser);
         bookEntryRepo.deleteById(id);
     }
 }
